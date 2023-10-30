@@ -1,13 +1,13 @@
 BIN_LUA = $(shell find * -name '*.lua')
 
-INST_LUA = $(addprefix $(INST_BINDIR)/, $(BIN_LUA))
+INST_LUA = $(patsubst %.lua,$(INST_BINDIR)/%, $(BIN_LUA))
 
 all:
 	@# Nothing to do here
 
 install: $(INST_LUA)
 
-$(INST_BINDIR)/%.lua: ./%.lua
+$(INST_BINDIR)/%: ./%.lua
 	mkdir -p $(dir $@)
 	cp $< $@
 
