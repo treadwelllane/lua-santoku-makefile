@@ -77,15 +77,23 @@ clean-all:
 
 tarball: $(BUILD_DIR)/$(TARBALL)
 
-upload: all
+check-release-status:
 	@if test -z "$(LUAROCKS_API_KEY)"; then echo "Missing LUAROCKS_API_KEY variable"; exit 1; fi
 	@if ! git diff --quiet; then echo "Commit your changes first"; exit 1; fi
+
+github-release-create: check-release-status tarball
+	@gh release create $(VERSION) $(BUILD_DIR)/$(TARBALL)
+
+luarocks-upload: check-release-status tarball
+	@luarocks upload --skip-pack --api-key "$(LUAROCKS_API_KEY)" "$(ROCKSPEC)"
+
+upload: check-release-status all
 	@git tag "$(VERSION)"
 	@git push --tags
 	@git push
 	@$(MAKE) tarball
-	@gh release create $(VERSION) $(BUILD_DIR)/$(TARBALL)
-	@luarocks upload --skip-pack --api-key "$(LUAROCKS_API_KEY)" "$(ROCKSPEC)"
+	@$(MAKE) github-release-create
+	@$(MAKE) luarocks-upload
 
 $(BUILD_DIR)/$(TARBALL): all
 	@rm -f $(BUILD_DIR)/$(TARBALL) || true
@@ -94,34 +102,34 @@ $(BUILD_DIR)/$(TARBALL): all
 			$$(ls $(TARBALL_SRCS) 2>/dev/null)
 
 .build/preamble.mk: config.lua
-	@echo "Templating preamble -> '$@'"
+	@echo "Generating '$@'"
 	@LUA="$(shell $(LUAROCKS) config lua_interpreter)" \
 	LUA_PATH="$(shell $(LUAROCKS) path --lr-path);?.lua" \
 	LUA_CPATH="$(shell $(LUAROCKS) path --lr-cpath)" \
 		sh -c 'echo $(PREAMBLE_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(ROCKSPEC): .build/preamble.mk
-	@echo "Templating '$@'"
+	@echo "Generating '$@'"
 	@sh -c 'echo $(ROCKSPEC_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(LUAROCKS_MK): .build/preamble.mk
-	@echo "Templating '$@'"
+	@echo "Generating '$@'"
 	@sh -c 'echo $(LUAROCKS_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(SRC_MK): .build/preamble.mk
-	@echo "Templating '$@'"
+	@echo "Generating '$@'"
 	@sh -c 'echo $(SRC_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(BIN_MK): .build/preamble.mk
-	@echo "Templating '$@'"
+	@echo "Generating '$@'"
 	@sh -c 'echo $(BIN_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(LUACOV_CFG): .build/preamble.mk
-	@echo "Templating '$@'"
+	@echo "Generating '$@'"
 	@sh -c 'echo $(LUACOV_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(LUACHECK_CFG): .build/preamble.mk
-	@echo "Templating '$@'"
+	@echo "Generating '$@'"
 	@sh -c 'echo $(LUACHECK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(BUILD_DIR)/%: %
@@ -141,5 +149,5 @@ $(BUILD_DIR)/%: %
 
 -include $(shell find $(BUILD_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
 
-.PHONY: all test iterate install touch clean clean-all upload tarball
+.PHONY: all test iterate install touch clean clean-all upload tarball check-release-status github-release-create luarocks-upload
 .DEFAULT_GOAL: all
