@@ -101,27 +101,27 @@ $(BUILD_DIR)/$(TARBALL): all
 		sh -c 'echo $(PREAMBLE_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(ROCKSPEC): .build/preamble.mk
-	@echo "Templating '$<' -> '$@'"
+	@echo "Templating '$@'"
 	@sh -c 'echo $(ROCKSPEC_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(LUAROCKS_MK): .build/preamble.mk
-	@echo "Templating '$<' -> '$@'"
+	@echo "Templating '$@'"
 	@sh -c 'echo $(LUAROCKS_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(SRC_MK): .build/preamble.mk
-	@echo "Templating '$<' -> '$@'"
+	@echo "Templating '$@'"
 	@sh -c 'echo $(SRC_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(BIN_MK): .build/preamble.mk
-	@echo "Templating '$<' -> '$@'"
+	@echo "Templating '$@'"
 	@sh -c 'echo $(BIN_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(LUACOV_CFG): .build/preamble.mk
-	@echo "Templating '$<' -> '$@'"
+	@echo "Templating '$@'"
 	@sh -c 'echo $(LUACOV_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(LUACHECK_CFG): .build/preamble.mk
-	@echo "Templating '$<' -> '$@'"
+	@echo "Templating '$@'"
 	@sh -c 'echo $(LUACHECK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(BUILD_DIR)/%: %
