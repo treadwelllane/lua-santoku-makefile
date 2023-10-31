@@ -5,3 +5,5 @@ VPFX = <% return variable_prefix %>
 export LUA = <% return os.getenv("LUA") %>
 export LUA_PATH = <% return os.getenv("LUA_PATH") %>
 export LUA_CPATH = <% return os.getenv("LUA_CPATH") %>
+
+export $(VPFX)_PUBLIC = <% return public and "1" or "0" %>

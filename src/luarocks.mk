@@ -11,11 +11,12 @@ all: $(DEPS_RESULTS) lua.env
 
 test:
 	@rm -f luacov.stats.out || true
-	@. ./lua.env && $($(VPFX)_TEST_PREFIX) toku test -i "$(LUA) -W -l luacov" --match "^.*%.lua$$" test/spec
-	@echo
-	@luacheck --config test/luacheck.lua src bin test/spec || true
+	@. ./lua.env && $($(VPFX)_TEST_PREFIX) \
+		toku test -i "$(LUA) -l luacov" --match "^.*%.lua$$" test/spec
 	@luacov -c test/luacov.lua || true
 	@cat luacov.report.out | awk '/^Summary/ { P = NR } P && NR > P + 1'
+	@echo
+	@luacheck --config test/luacheck.lua src bin test/spec || true
 	@echo
 
 install: all
