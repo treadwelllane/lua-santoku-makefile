@@ -8,10 +8,14 @@ endif
 
 ROOT_DIR = $(PWD)
 BUILD_DIR = $(ROOT_DIR)/.build/$($(VPFX)_ENV)
+WEB_DIST_DIR = $(BUILD_DIR)/web-dist
 
 TOKU_TEMPLATE = BUILD_DIR="$(BUILD_DIR)" toku template -M -c config.lua
 ROCKSPEC = $(BUILD_DIR)/$(NAME)-$(VERSION).rockspec
 
+WEB = $(WEB_CLIENT) $(WEB_SERVER)
+WEB_CLIENT = $(shell find web/client -type f 2>/dev/null)
+WEB_SERVER = $(shell find web/server -type f 2>/dev/null)
 SRC = $(shell find src -type f 2>/dev/null)
 BIN = $(shell find bin -type f 2>/dev/null)
 TEST = $(shell find test -type f 2>/dev/null)
@@ -21,27 +25,59 @@ DEPS = $(shell find deps -type f 2>/dev/null)
 LUAROCKS = LUAROCKS_CONFIG=$(LUAROCKS_CFG) luarocks
 LUAROCKS_MK = $(BUILD_DIR)/Makefile
 LUAROCKS_CFG = $(BUILD_DIR)/luarocks.lua
+
+ifneq ($(WEB),)
+WEB_MK = $(BUILD_DIR)/web/Makefile
+endif
+
+ifneq ($(WEB_CLIENT),)
+WEB_CLIENT_MK = $(BUILD_DIR)/web/client/Makefile
+endif
+
+ifneq ($(WEB_SERVER),)
+WEB_SERVER_MK = $(BUILD_DIR)/web/server/Makefile
+WEB_SERVER_NGINX_CFG = $(BUILD_DIR)/web/server/nginx.conf
+endif
+
+ifneq ($(SRC),)
 SRC_MK = $(BUILD_DIR)/src/Makefile
+endif
+
+ifneq ($(BIN),)
 BIN_MK = $(BUILD_DIR)/bin/Makefile
+endif
+
+ifneq ($(TEST),)
 LUACOV_CFG = $(BUILD_DIR)/test/luacov.lua
 LUACHECK_CFG = $(BUILD_DIR)/test/luacheck.lua
+endif
+
+ifeq ($(shell test -f custom.mk && echo 1),1)
+CUSTOM_MK = $(BUILD_DIR)/custom.mk
+endif
 
 PREAMBLE_DATA = <% return check(sys.sh("base64 -w0 < src/preamble.mk")):co():head() %>
 ROCKSPEC_DATA = <% return check(sys.sh("base64 -w0 < src/template.rockspec")):co():head() %>
 LUAROCKS_MK_DATA = <% return check(sys.sh("base64 -w0 < src/luarocks.mk")):co():head() %>
 LUAROCKS_CFG_DATA = <% return check(sys.sh("base64 -w0 < src/luarocks.lua")):co():head() %>
+WEB_MK_DATA = <% return check(sys.sh("base64 -w0 < src/web.mk")):co():head() %>
+WEB_CLIENT_MK_DATA = <% return check(sys.sh("base64 -w0 < src/web/client.mk")):co():head() %>
+WEB_SERVER_MK_DATA = <% return check(sys.sh("base64 -w0 < src/web/server.mk")):co():head() %>
+WEB_SERVER_NGINX_CFG_DATA = <% return check(sys.sh("base64 -w0 < src/web/nginx.conf")):co():head() %>
 SRC_MK_DATA = <% return check(sys.sh("base64 -w0 < src/src.mk")):co():head() %>
 BIN_MK_DATA = <% return check(sys.sh("base64 -w0 < src/bin.mk")):co():head() %>
 LUACOV_DATA = <% return check(sys.sh("base64 -w0 < src/luacov.lua")):co():head() %>
 LUACHECK_DATA = <% return check(sys.sh("base64 -w0 < src/luacheck.lua")):co():head() %>
 
 CONFIG_DEPS = $(lastword $(MAKEFILE_LIST))
-CONFIG_DEPS += $(ROCKSPEC) $(LUAROCKS_MK) $(LUAROCKS_CFG) $(SRC_MK) $(BIN_MK) $(LUACOV_CFG) $(LUACHECK_CFG)
-CONFIG_DEPS += $(addprefix $(BUILD_DIR)/, $(SRC) $(BIN) $(TEST) $(RES) $(DEPS))
+CONFIG_DEPS += $(ROCKSPEC) $(LUAROCKS_MK) $(LUAROCKS_CFG) $(WEB_MK) $(WEB_CLIENT_MK) $(WEB_SERVER_MK) $(WEB_SERVER_NGINX_CFG) $(SRC_MK) $(BIN_MK) $(LUACOV_CFG) $(LUACHECK_CFG) $(CUSTOM_MK)
+CONFIG_DEPS += $(addprefix $(BUILD_DIR)/, $(WEB) $(SRC) $(BIN) $(TEST) $(RES) $(DEPS))
 
 TARBALL = $(TARBALL_DIR).tar.gz
 TARBALL_DIR = $(NAME)-$(VERSION)
-TARBALL_SRCS = Makefile src/Makefile bin/Makefile $(shell find src bin deps res -type f 2>/dev/null)
+
+# TODO: Should this include web and res?
+TARBALL_SRCS = Makefile src/Makefile bin/Makefile $(shell find src bin deps -type f 2>/dev/null)
 
 all: $(CONFIG_DEPS)
 	@echo "Running all"
@@ -79,31 +115,28 @@ clean-all:
 
 ifeq ($($(VPFX)_PUBLIC),1)
 
-tarball: $(BUILD_DIR)/$(TARBALL)
+tarball:
+	@rm -f $(BUILD_DIR)/$(TARBALL) || true
+	@cd $(BUILD_DIR) && \
+		tar --dereference --transform 's#^#$(TARBALL_DIR)/#' -czvf $(TARBALL) \
+			$$(ls $(TARBALL_SRCS) 2>/dev/null)
 
 check-release-status:
 	@if test -z "$(LUAROCKS_API_KEY)"; then echo "Missing LUAROCKS_API_KEY variable"; exit 1; fi
 	@if ! git diff --quiet; then echo "Commit your changes first"; exit 1; fi
 
-github-release-create: check-release-status tarball
-	@gh release create $(VERSION) $(BUILD_DIR)/$(TARBALL)
+github-release: check-release-status tarball
+	@gh release create --generate-notes "$(VERSION)" "$(BUILD_DIR)/$(TARBALL)" "$(ROCKSPEC)"
 
-luarocks-upload: check-release-status tarball
+luarocks-upload: check-release-status
 	@luarocks upload --skip-pack --api-key "$(LUAROCKS_API_KEY)" "$(ROCKSPEC)"
 
 release: check-release-status all
 	@git tag "$(VERSION)"
 	@git push --tags
 	@git push
-	@$(MAKE) tarball
-	@$(MAKE) github-release-create
+	@$(MAKE) github-release
 	@$(MAKE) luarocks-upload
-
-$(BUILD_DIR)/$(TARBALL): all
-	@rm -f $(BUILD_DIR)/$(TARBALL) || true
-	@cd $(BUILD_DIR) && \
-		tar --transform 's#^#$(TARBALL_DIR)/#' -czvf $(TARBALL) \
-			$$(ls $(TARBALL_SRCS) 2>/dev/null)
 
 endif
 
@@ -125,6 +158,22 @@ $(LUAROCKS_MK): .build/preamble.mk
 $(LUAROCKS_CFG): .build/preamble.mk
 	@echo "Generating '$@'"
 	@sh -c 'echo $(LUAROCKS_CFG_DATA) | base64 -d | BUILD_DIR="$(BUILD_DIR)" $(TOKU_TEMPLATE) -f - -o "$@"'
+
+$(WEB_MK): .build/preamble.mk
+	@echo "Generating '$@'"
+	@sh -c 'echo $(WEB_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
+
+$(WEB_CLIENT_MK): .build/preamble.mk
+	@echo "Generating '$@'"
+	@sh -c 'echo $(WEB_CLIENT_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
+
+$(WEB_SERVER_MK): .build/preamble.mk
+	@echo "Generating '$@'"
+	@sh -c 'echo $(WEB_SERVER_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
+
+$(WEB_SERVER_NGINX_CFG): .build/preamble.mk
+	@echo "Generating '$@'"
+	@sh -c 'echo $(WEB_SERVER_NGINX_CFG_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
 $(SRC_MK): .build/preamble.mk
 	@echo "Generating '$@'"
@@ -152,6 +201,10 @@ $(BUILD_DIR)/%: %
 			echo "Copying '$<' -> '$@'"; \
 			mkdir -p "$(dir $@)"; \
 			cp "$<" "$@";; \
+		web/client/res/*) \
+			echo "Copying '$<' -> '$@'"; \
+			mkdir -p "$(dir $@)"; \
+			cp "$<" "$@";; \
 		*) \
 			echo "Templating '$<' -> '$@'"; \
 			$(TOKU_TEMPLATE) -f "$<" -o "$@";; \
@@ -159,5 +212,5 @@ $(BUILD_DIR)/%: %
 
 -include $(shell find $(BUILD_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
 
-.PHONY: all test iterate install touch clean clean-all release check-release-status github-release-create luarocks-upload
+.PHONY: all test iterate install touch clean clean-all release check-release-status github-release luarocks-upload
 .DEFAULT_GOAL: all
