@@ -17,12 +17,12 @@ ifeq ($(shell test -d test && echo 1),1)
 
 test:
 	@rm -f luacov.stats.out luacov.report.out || true
-	@. ./lua.env && $($(VPFX)_TEST_PREFIX) \
-		toku test -i "$(LUA) -l luacov" --match "^.*%.lua$$" test/spec
-	@luacov -c test/luacov.lua || true
-	@cat luacov.report.out | awk '/^Summary/ { P = NR } P && NR > P + 1'
+	@if [ -d test/spec ]; then . ./lua.env && $($(VPFX)_TEST_PREFIX) \
+		toku test -i "$(LUA) -l luacov" --match "^.*%.lua$$" test/spec; fi
+	@if [ -f test/luacov.lua ]; then luacov -c test/luacov.lua; fi
+	@if [ -f luacov.report.out ]; then cat luacov.report.out | awk '/^Summary/ { P = NR } P && NR > P + 1'; fi
 	@echo
-	@luacheck --config test/luacheck.lua src bin test/spec || true
+	@if [ -f test/luacheck.lua ]; then luacheck --config test/luacheck.lua $$(find src bin test/spec -maxdepth 0 2>/dev/null); fi
 	@echo
 
 else

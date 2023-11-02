@@ -12,4 +12,7 @@ dist/Makefile: $(shell find src -type f)
 dist/config.lua: src/config.lua
 	install -m 644 src/config.lua $@
 
-.PHONY: all iterate
+clean:
+	rm -rf dist
+
+.PHONY: all iterate clean
