@@ -10,6 +10,6 @@ dist/Makefile: $(shell find src -type f)
 	toku template -f src/Makefile -o $@
 
 dist/config.lua: src/config.lua
-	install src/config.lua $@
+	install -m 644 src/config.lua $@
 
 .PHONY: all iterate

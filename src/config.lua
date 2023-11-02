@@ -3,12 +3,9 @@ local _ENV = {}
 name = "example"
 version = "0.0.1-1"
 variable_prefix = "EXAMPLE"
+public = false
 
-license = "MIT"
-
-luacov_include = {
-  -- fixme
-}
+license = "UNLICENSED"
 
 dependencies = {
   "lua >= 5.1",

@@ -21,10 +21,19 @@ DEPS = $(shell find deps -type f 2>/dev/null)
 LUAROCKS = LUAROCKS_CONFIG=$(LUAROCKS_CFG) luarocks
 LUAROCKS_MK = $(BUILD_DIR)/Makefile
 LUAROCKS_CFG = $(BUILD_DIR)/luarocks.lua
+
+ifneq ($(SRC),)
 SRC_MK = $(BUILD_DIR)/src/Makefile
+endif
+
+ifneq ($(BIN),)
 BIN_MK = $(BUILD_DIR)/bin/Makefile
+endif
+
+ifneq ($(TEST),)
 LUACOV_CFG = $(BUILD_DIR)/test/luacov.lua
 LUACHECK_CFG = $(BUILD_DIR)/test/luacheck.lua
+endif
 
 PREAMBLE_DATA = <% return check(sys.sh("base64 -w0 < src/preamble.mk")):co():head() %>
 ROCKSPEC_DATA = <% return check(sys.sh("base64 -w0 < src/template.rockspec")):co():head() %>
@@ -79,31 +88,28 @@ clean-all:
 
 ifeq ($($(VPFX)_PUBLIC),1)
 
-tarball: $(BUILD_DIR)/$(TARBALL)
+tarball:
+	@rm -f $(BUILD_DIR)/$(TARBALL) || true
+	@cd $(BUILD_DIR) && \
+		tar --dereference --transform 's#^#$(TARBALL_DIR)/#' -czvf $(TARBALL) \
+			$$(ls $(TARBALL_SRCS) 2>/dev/null)
 
 check-release-status:
 	@if test -z "$(LUAROCKS_API_KEY)"; then echo "Missing LUAROCKS_API_KEY variable"; exit 1; fi
 	@if ! git diff --quiet; then echo "Commit your changes first"; exit 1; fi
 
-github-release-create: check-release-status tarball
-	@gh release create $(VERSION) $(BUILD_DIR)/$(TARBALL)
+github-release: check-release-status tarball
+	@gh release create --generate-notes "$(VERSION)" "$(BUILD_DIR)/$(TARBALL)" "$(ROCKSPEC)"
 
-luarocks-upload: check-release-status tarball
+luarocks-upload: check-release-status
 	@luarocks upload --skip-pack --api-key "$(LUAROCKS_API_KEY)" "$(ROCKSPEC)"
 
 release: check-release-status all
 	@git tag "$(VERSION)"
 	@git push --tags
 	@git push
-	@$(MAKE) tarball
-	@$(MAKE) github-release-create
+	@$(MAKE) github-release
 	@$(MAKE) luarocks-upload
-
-$(BUILD_DIR)/$(TARBALL): all
-	@rm -f $(BUILD_DIR)/$(TARBALL) || true
-	@cd $(BUILD_DIR) && \
-		tar --transform 's#^#$(TARBALL_DIR)/#' -czvf $(TARBALL) \
-			$$(ls $(TARBALL_SRCS) 2>/dev/null)
 
 endif
 
@@ -159,5 +165,5 @@ $(BUILD_DIR)/%: %
 
 -include $(shell find $(BUILD_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
 
-.PHONY: all test iterate install touch clean clean-all release check-release-status github-release-create luarocks-upload
+.PHONY: all test iterate install touch clean clean-all release check-release-status github-release luarocks-upload
 .DEFAULT_GOAL: all
