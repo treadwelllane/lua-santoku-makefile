@@ -113,7 +113,7 @@ release: check-release-status all
 
 endif
 
-.build/preamble.mk: config.lua
+.build/preamble.mk: $(LUAROCKS_CFG) config.lua
 	@echo "Generating '$@'"
 	@LUA="$(shell $(LUAROCKS) config lua_interpreter)" \
 	LUA_PATH="$(shell $(LUAROCKS) path --lr-path);?.lua" \
@@ -128,7 +128,7 @@ $(LUAROCKS_MK): .build/preamble.mk
 	@echo "Generating '$@'"
 	@sh -c 'echo $(LUAROCKS_MK_DATA) | base64 -d | $(TOKU_TEMPLATE) -f - -o "$@"'
 
-$(LUAROCKS_CFG): .build/preamble.mk
+$(LUAROCKS_CFG):
 	@echo "Generating '$@'"
 	@sh -c 'echo $(LUAROCKS_CFG_DATA) | base64 -d | BUILD_DIR="$(BUILD_DIR)" $(TOKU_TEMPLATE) -f - -o "$@"'
 
