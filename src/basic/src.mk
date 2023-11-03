@@ -9,10 +9,14 @@ INST_SO = $(addprefix $(INST_LIBDIR)/, $(SRC_SO))
 LIB_CFLAGS += -Wall -I$(LUA_INCDIR)
 LIB_LDFLAGS += -Wall -L$(LUA_LIBDIR)
 
+<% template:push(os.getenv("TEST") == "1") %>
+
 ifeq ($($(VPFX)_SANITIZE),1)
 LIB_CFLAGS += -fsanitize=address -fsanitize=leak
 LIB_LDFLAGS += -fsanitize=address -fsanitize=leak
 endif
+
+<% template:pop() %>
 
 all: $(SRC_O) $(SRC_SO)
 
