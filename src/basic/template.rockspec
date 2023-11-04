@@ -11,7 +11,7 @@ source = {
 
 description = {
   homepage = "<% return homepage %>",
-  license = "<% return license %>"
+  license = "<% return license or 'UNLICENSED' %>"
 }
 
 dependencies = {

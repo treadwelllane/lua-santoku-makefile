@@ -1,10 +1,10 @@
-SRC_LUA = $(shell find * -name '*.lua')
-SRC_C = $(shell find * -name '*.c')
-SRC_O = $(SRC_C:.c=.o)
-SRC_SO = $(SRC_O:.o=.$(LIB_EXTENSION))
+LIB_LUA = $(shell find * -name '*.lua')
+LIB_C = $(shell find * -name '*.c')
+LIB_O = $(LIB_C:.c=.o)
+LIB_SO = $(LIB_O:.o=.$(LIB_EXTENSION))
 
-INST_LUA = $(addprefix $(INST_LUADIR)/, $(SRC_LUA))
-INST_SO = $(addprefix $(INST_LIBDIR)/, $(SRC_SO))
+INST_LUA = $(addprefix $(INST_LUADIR)/, $(LIB_LUA))
+INST_SO = $(addprefix $(INST_LIBDIR)/, $(LIB_SO))
 
 LIB_CFLAGS += -Wall -I$(LUA_INCDIR)
 LIB_LDFLAGS += -Wall -L$(LUA_LIBDIR)
@@ -18,7 +18,7 @@ endif
 
 <% template:pop() %>
 
-all: $(SRC_O) $(SRC_SO)
+all: $(LIB_O) $(LIB_SO)
 
 %.o: %.c
 	$(CC) $(LIB_CFLAGS) $(CFLAGS) -c -o $@ $<

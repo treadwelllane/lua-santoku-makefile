@@ -10,4 +10,7 @@ $(INST_LUADIR)/%.lua: ./lib/%.lua
 	mkdir -p "$(dir $@)"
 	cp "$<" "$@"
 
+deps/%/results.mk: deps/%/Makefile
+	@$(MAKE) -C "$(dir $@)"
+
 .PHONY: all install

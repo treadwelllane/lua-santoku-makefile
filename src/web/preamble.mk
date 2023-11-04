@@ -1,3 +1,2 @@
-NAME = <% return name %>
-VERSION = <% return version %>
-VPFX = <% return variable_prefix %>
+export NAME = <% return name %>
+export VERSION = <% return version %>

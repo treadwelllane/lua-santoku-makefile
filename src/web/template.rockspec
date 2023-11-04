@@ -38,6 +38,7 @@ dependencies = {
 
 build = {
   type = "make",
+  makefile = "luarocks.mk",
   variables = {
     LIB_EXTENSION = "$(LIB_EXTENSION)",
   },
