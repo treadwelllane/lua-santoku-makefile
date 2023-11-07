@@ -125,7 +125,7 @@ iterate: $(CONFIG_DEPS)
 	@echo "Running iterate"
 	@while true; do \
 		$(MAKE) test; \
-		inotifywait -qqr -e close_write -e create -e delete *; \
+		inotifywait -qqr -e close_write -e create -e delete $(filter-out tmp, $(wildcard *)); \
 	done
 
 $(PREAMBLE): $(MAIN_CONFIG)

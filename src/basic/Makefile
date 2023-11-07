@@ -14,6 +14,9 @@ ifndef $(VPFX)_ENV
 export $(VPFX)_ENV = default
 endif
 
+# NOTE: This allows callers to override install location
+LUAROCKS ?= luarocks
+
 export BUILD_DIR = $(BUILD_BASE_DIR)/$($(VPFX)_ENV)
 
 TOKU_TEMPLATE = BUILD_DIR="$(BUILD_DIR)" toku template -M -c $(ROOT_DIR)/config.lua
@@ -76,7 +79,7 @@ all: $(CONFIG_DEPS)
 
 install: all
 	@echo "Running install"
-	cd $(BUILD_DIR) && luarocks make $(ROCKSPEC)
+	cd $(BUILD_DIR) && $(LUAROCKS) make $(ROCKSPEC) $(LUAROCKS_VARS)
 
 test: all
 	@echo "Running test"
@@ -87,7 +90,7 @@ iterate: all
 	@echo "Running iterate"
 	@while true; do \
 		$(MAKE) test; \
-		inotifywait -qqr -e close_write -e create -e delete bin lib test Makefile config.lua config.mk; \
+		inotifywait -qqr -e close_write -e create -e delete $(filter-out tmp, $(wildcard *)); \
 	done
 
 ifeq ($($(VPFX)_PUBLIC),1)

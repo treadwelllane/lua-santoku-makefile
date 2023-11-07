@@ -1,6 +1,6 @@
 # Now
 
-- Web makefiles
+- Use VPFX whenever we're exporting variables
 - Cleanup
 
 # Later

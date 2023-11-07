@@ -1,4 +1,8 @@
-<% sys = require("santoku.system") %>
+<%
+	sys = require("santoku.system")
+	str = require("santoku.string")
+	tbl = require("santoku.table")
+%>
 
 all:
 
@@ -18,10 +22,25 @@ RUN_SH_DIST = $(DIST_DIR)/run.sh
 DEPS = $(ROCKSPEC) $(NGINX_CONF_DIST) $(RUN_SH_DIST)
 DEPS += $(addprefix $(DIST_DIR)/, $(shell find scripts res -type f 2>/dev/null))
 
+<% post_luarocks = tbl.get(server, "hooks", "post_luarocks") %>
+<% template:push(post_luarocks) %>
+POST_LUAROCKS_DATA = <%
+	local script = str.quote(post_luarocks)
+	return check(sys.sh("echo -e '#!/bin/sh\nset -e\n'" .. script .. " | base64 -w0")):co():head()
+%>
+DEPS += hooks/post_luarocks.sh
+hooks/post_luarocks.sh: $(MAIN_CONFIG)
+	@echo "Generating '$@'"
+	@sh -c 'echo $(POST_LUAROCKS_DATA) | base64 -d | $(TOKU_TEMPLATE_SERVER) -f - -o "$@"'
+<% template:pop() %>
+
 all: $(DEPS) luarocks
 
 luarocks:
 	$(SERVER_LUAROCKS) make $(ROCKSPEC)
+	<% template:push(post_luarocks) %>
+	@cd "$(ROOT_DIR)" && LUAROCKS="$(SERVER_LUAROCKS)" sh $(CURDIR)/hooks/post_luarocks.sh
+	<% template:pop() %>
 
 $(ROCKSPEC): $(MAIN_CONFIG)
 	@echo "Generating '$@'"
