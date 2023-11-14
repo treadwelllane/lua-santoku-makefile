@@ -49,19 +49,19 @@ TEST_ENV = $(BUILD_DIR)/test/lua.env
 TEST_LUACOV_CFG = $(BUILD_DIR)/test/luacov.lua
 TEST_LUACHECK_CFG = $(BUILD_DIR)/test/luacheck.lua
 
-PREAMBLE_DATA = <% return check(sys.sh("base64 -w0 < src/basic/preamble.mk")):co():head() %>
-ROCKSPEC_DATA = <% return check(sys.sh("base64 -w0 < src/basic/template.rockspec")):co():head() %>
+PREAMBLE_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/preamble.mk")):co():head() %>
+ROCKSPEC_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/template.rockspec")):co():head() %>
 
-LUAROCKS_MK_DATA = <% return check(sys.sh("base64 -w0 < src/basic/luarocks.mk")):co():head() %>
+LUAROCKS_MK_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/luarocks.mk")):co():head() %>
 
-LIB_MK_DATA = <% return check(sys.sh("base64 -w0 < src/basic/lib.mk")):co():head() %>
-BIN_MK_DATA = <% return check(sys.sh("base64 -w0 < src/basic/bin.mk")):co():head() %>
+LIB_MK_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/lib.mk")):co():head() %>
+BIN_MK_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/bin.mk")):co():head() %>
 
-TEST_LUAROCKS_CFG_DATA = <% return check(sys.sh("base64 -w0 < src/basic/luarocks.lua")):co():head() %>
-TEST_LUACOV_DATA = <% return check(sys.sh("base64 -w0 < src/basic/luacov.lua")):co():head() %>
-TEST_LUACHECK_DATA = <% return check(sys.sh("base64 -w0 < src/basic/luacheck.lua")):co():head() %>
+TEST_LUAROCKS_CFG_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/luarocks.lua")):co():head() %>
+TEST_LUACOV_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/luacov.lua")):co():head() %>
+TEST_LUACHECK_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/luacheck.lua")):co():head() %>
 
-export TEST_RUN_SH_DATA = <% return check(sys.sh("base64 -w0 < src/basic/test-run.sh")):co():head() %>
+export TEST_RUN_SH_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/test-run.sh")):co():head() %>
 
 CONFIG_DEPS = $(lastword $(MAKEFILE_LIST))
 CONFIG_DEPS += $(ROCKSPEC) $(LUAROCKS_MK) $(LIB_MK) $(BIN_MK)

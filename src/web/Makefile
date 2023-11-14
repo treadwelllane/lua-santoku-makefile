@@ -55,16 +55,16 @@ CLIENT_LUAROCKS_MK = $(BUILD_DIR)/client/luarocks.mk
 
 LUACHECK_CFG = $(BUILD_DIR)/luacheck.lua
 
-PREAMBLE_DATA = <% return check(sys.sh("base64 -w0 < src/web/preamble.mk")):co():head() %>
-LUAROCKS_CFG_DATA = <% return check(sys.sh("base64 -w0 < src/web/luarocks.lua")):co():head() %>
-LUACHECK_DATA = <% return check(sys.sh("base64 -w0 < src/web/luacheck.lua")):co():head() %>
-LUAROCKS_MK_DATA = <% return check(sys.sh("base64 -w0 < src/web/luarocks.mk")):co():head() %>
-SERVER_MK_DATA = <% return check(sys.sh("base64 -w0 < src/web/server.mk")):co():head() %>
-CLIENT_MK_DATA = <% return check(sys.sh("base64 -w0 < src/web/client.mk")):co():head() %>
+PREAMBLE_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/preamble.mk")):co():head() %>
+LUAROCKS_CFG_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/luarocks.lua")):co():head() %>
+LUACHECK_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/luacheck.lua")):co():head() %>
+LUAROCKS_MK_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/luarocks.mk")):co():head() %>
+SERVER_MK_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/server.mk")):co():head() %>
+CLIENT_MK_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/client.mk")):co():head() %>
 
-export ROCKSPEC_DATA = <% return check(sys.sh("base64 -w0 < src/web/template.rockspec")):co():head() %>
-export SERVER_NGINX_CONF_DATA = <% return check(sys.sh("base64 -w0 < src/web/nginx.conf")):co():head() %>
-export SERVER_RUN_SH_DATA = <% return check(sys.sh("base64 -w0 < src/web/run.sh")):co():head() %>
+export ROCKSPEC_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/template.rockspec")):co():head() %>
+export SERVER_NGINX_CONF_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/nginx.conf")):co():head() %>
+export SERVER_RUN_SH_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/web/run.sh")):co():head() %>
 
 CONFIG_DEPS += $(lastword $(MAKEFILE_LIST))
 CONFIG_DEPS += $(SERVER_LUAROCKS_CFG) $(CLIENT_LUAROCKS_CFG)
@@ -77,21 +77,21 @@ CONFIG_DEPS += $(patsubst shared/%, $(BUILD_DIR)/client/%, $(SHARED_LIBS))
 
 ifndef CLIENT_LUA_DIR
 CLIENT_LUA_OK = $(BUILD_DIR)/client/lua.ok
-export CLIENT_LUA_DIR = $(BUILD_DIR)/client/lua-5.4.6/install
+export CLIENT_LUA_DIR = $(BUILD_DIR)/client/lua-5.1.5
 CONFIG_DEPS += $(CLIENT_LUA_OK)
 $(CLIENT_LUA_OK):
-	[ ! -f $(BUILD_DIR)/client/lua-5.4.6.tar.gz ] && \
-		cd $(BUILD_DIR)/client && wget https://www.lua.org/ftp/lua-5.4.6.tar.gz || true
-	rm -rf $(BUILD_DIR)/client/lua-5.4.6
-	cd $(BUILD_DIR)/client && tar xf lua-5.4.6.tar.gz
-	cd $(BUILD_DIR)/client/lua-5.4.6 && make $(CLIENT_VARS) AR="emar rcu" LDFLAGS="$(CFLAGS) -sEXIT_RUNTIME=1"
-	cd $(BUILD_DIR)/client/lua-5.4.6 && make local $(CLIENT_VARS) AR="emar rcu" LDFLAGS="$(CFLAGS) -sEXIT_RUNTIME=1"
-	cd $(BUILD_DIR)/client/lua-5.4.6/install/bin && mv lua lua.js
-	cd $(BUILD_DIR)/client/lua-5.4.6/install/bin && mv luac luac.js
-	cd $(BUILD_DIR)/client/lua-5.4.6/install/bin && echo -e "#!/bin/sh\nnode \"\$$(dirname \$$0)/lua.js\" \"\$$@\"" > lua && chmod +x lua
-	cd $(BUILD_DIR)/client/lua-5.4.6/install/bin && echo -e "#!/bin/sh\nnode \"\$$(dirname \$$0)/luac.js\" \"\$$@\"" > luac && chmod +x luac
-	cd $(BUILD_DIR)/client/lua-5.4.6 && cp src/lua.wasm install/bin/lua.wasm
-	cd $(BUILD_DIR)/client/lua-5.4.6 && cp src/luac.wasm install/bin/luac.wasm
+	[ ! -f $(BUILD_DIR)/client/lua-5.1.5.tar.gz ] && \
+		cd $(BUILD_DIR)/client && wget https://www.lua.org/ftp/lua-5.1.5.tar.gz || true
+	rm -rf $(BUILD_DIR)/client/lua-5.1.5
+	cd $(BUILD_DIR)/client && tar xf lua-5.1.5.tar.gz
+	cd $(BUILD_DIR)/client/lua-5.1.5 && make generic $(CLIENT_VARS) AR="emar rcu" LDFLAGS="$(CFLAGS) -sEXIT_RUNTIME=1"
+	cd $(BUILD_DIR)/client/lua-5.1.5 && make local $(CLIENT_VARS) AR="emar rcu" LDFLAGS="$(CFLAGS) -sEXIT_RUNTIME=1"
+	cd $(BUILD_DIR)/client/lua-5.1.5/bin && mv lua lua.js
+	cd $(BUILD_DIR)/client/lua-5.1.5/bin && mv luac luac.js
+	cd $(BUILD_DIR)/client/lua-5.1.5/bin && echo -e "#!/bin/sh\nnode \"\$$(dirname \$$0)/lua.js\" \"\$$@\"" > lua && chmod +x lua
+	cd $(BUILD_DIR)/client/lua-5.1.5/bin && echo -e "#!/bin/sh\nnode \"\$$(dirname \$$0)/luac.js\" \"\$$@\"" > luac && chmod +x luac
+	cd $(BUILD_DIR)/client/lua-5.1.5 && cp src/lua.wasm bin/lua.wasm
+	cd $(BUILD_DIR)/client/lua-5.1.5 && cp src/luac.wasm bin/luac.wasm
 	touch "$@"
 endif
 

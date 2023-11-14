@@ -14,24 +14,39 @@ end):map(function (env)
   return ". " .. env
 end):concat("\n") %>
 
-rm -f luacov.stats.out luacov.report.out || true
+if [ -n "$TEST_CMD" ]; then
 
-if [ -d spec ]; then
- toku test -i "$LUA -l luacov" --match "^.*%.lua$" spec
+  set -x
+  cd "$ROOT_DIR"
+  $TEST_CMD
+
+else
+
+  rm -f luacov.stats.out luacov.report.out || true
+
+  if [ -n "$TEST" ]; then
+    TEST="${TEST#test/}"
+    toku test -s -i "$LUA -l luacov" "$TEST"
+    status=$?
+  elif [ -d spec ]; then
+    toku test -s -i "$LUA -l luacov" --match "^.*%.lua$" spec
+    status=$?
+  fi
+
+  if [ "$status" = "0" ] && [ -f luacov.lua ]; then
+    luacov -c luacov.lua
+  fi
+
+  if [ "$status" = "0" ] && [ -f luacov.report.out ]; then
+    cat luacov.report.out | awk '/^Summary/ { P = NR } P && NR > P + 1'
+  fi
+
+  echo
+
+  if [ -f luacheck.lua ]; then
+    luacheck --config luacheck.lua $(find lib bin spec -maxdepth 0 2>/dev/null)
+  fi
+
+  echo
+
 fi
-
-if [ -f luacov.lua ]; then
-  luacov -c luacov.lua
-fi
-
-if [ -f luacov.report.out ]; then
-  cat luacov.report.out | awk '/^Summary/ { P = NR } P && NR > P + 1'
-fi
-
-echo
-
-if [ -f luacheck.lua ]; then
-  luacheck --config luacheck.lua $(find lib bin spec -maxdepth 0 2>/dev/null)
-fi
-
-echo

@@ -21,6 +21,9 @@ variables = {
 
 <% template:pop():push(os.getenv("CLIENT") == "1") %>
 
+lua_interpreter = "lua"
+lua_version = "5.1"
+
 rocks_trees = {
   { name = "system",
     root = "<% return os.getenv('BUILD_DIR') %>/client/lua_modules"

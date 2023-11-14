@@ -6,8 +6,8 @@ LIB_SO = $(LIB_O:.o=.$(LIB_EXTENSION))
 INST_LUA = $(addprefix $(INST_LUADIR)/, $(LIB_LUA))
 INST_SO = $(addprefix $(INST_LIBDIR)/, $(LIB_SO))
 
-LIB_CFLAGS += -Wall -I$(LUA_INCDIR)
-LIB_LDFLAGS += -Wall -L$(LUA_LIBDIR)
+LIB_CFLAGS += -Wall $(addprefix -I, $(LUA_INCDIR))
+LIB_LDFLAGS += -Wall $(addprefix -L, $(LUA_LIBDIR))
 
 <% template:push(os.getenv("TEST") == "1") %>
 
@@ -24,7 +24,7 @@ all: $(LIB_O) $(LIB_SO)
 	$(CC) $(LIB_CFLAGS) $(CFLAGS) -c -o $@ $<
 
 %.$(LIB_EXTENSION): %.o
-	$(CC) $(LIB_LDFLAGS) $(LDFLAGS) $(LIBFLAG) -o $@ $<
+	$(CC) $(CFLAGS) $(LIB_LDFLAGS) $(LDFLAGS) $(LIBFLAG) -o $@ $<
 
 install: $(INST_LUA) $(INST_SO)
 

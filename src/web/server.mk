@@ -26,7 +26,7 @@ DEPS += $(addprefix $(DIST_DIR)/, $(shell find scripts res -type f 2>/dev/null))
 <% template:push(post_luarocks) %>
 POST_LUAROCKS_DATA = <%
 	local script = str.quote(post_luarocks)
-	return check(sys.sh("echo -e '#!/bin/sh\nset -e\n'" .. script .. " | base64 -w0")):co():head()
+	return check(sys.sh("sh", "-c", "echo -e '#!/bin/sh\nset -e\n'" .. script .. " | base64 -w0")):co():head()
 %>
 DEPS += hooks/post_luarocks.sh
 hooks/post_luarocks.sh: $(MAIN_CONFIG)
