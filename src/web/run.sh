@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 <%
   gen = require("santoku.gen")
@@ -8,7 +8,6 @@
 %>
 
 set -ex
-set -o pipefail
 cd "$(dirname $0)"
 
 <% return vec.wrap(server.run_envs or {}):extend(str.split(os.getenv("RUN_ENVS") or "")):map(function (env)

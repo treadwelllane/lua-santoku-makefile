@@ -204,7 +204,6 @@ $(BUILD_DIR)/test/%: %
 			$(TOKU_TEMPLATE) -f "$<" -o "$@";; \
 	esac
 
--include $(shell find $(BUILD_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
+-include $(shell find $(BUILD_BASE_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
 
 .PHONY: all test iterate install release check-release-status github-release luarocks-upload
-.DEFAULT_GOAL: all

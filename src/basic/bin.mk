@@ -1,3 +1,5 @@
+export VPFX = <% return variable_prefix %>
+
 BIN_LUA = $(shell find * -name '*.lua')
 
 INST_LUA = $(patsubst %.lua,$(INST_BINDIR)/%, $(BIN_LUA))

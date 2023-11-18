@@ -88,8 +88,8 @@ $(CLIENT_LUA_OK):
 	cd $(BUILD_DIR)/client/lua-5.1.5 && make local $(CLIENT_VARS) AR="emar rcu" LDFLAGS="$(CFLAGS) -sEXIT_RUNTIME=1"
 	cd $(BUILD_DIR)/client/lua-5.1.5/bin && mv lua lua.js
 	cd $(BUILD_DIR)/client/lua-5.1.5/bin && mv luac luac.js
-	cd $(BUILD_DIR)/client/lua-5.1.5/bin && echo -e "#!/bin/sh\nnode \"\$$(dirname \$$0)/lua.js\" \"\$$@\"" > lua && chmod +x lua
-	cd $(BUILD_DIR)/client/lua-5.1.5/bin && echo -e "#!/bin/sh\nnode \"\$$(dirname \$$0)/luac.js\" \"\$$@\"" > luac && chmod +x luac
+	cd $(BUILD_DIR)/client/lua-5.1.5/bin && printf "#!/bin/sh\nnode \"\$$(dirname \$$0)/lua.js\" \"\$$@\"\n" > lua && chmod +x lua
+	cd $(BUILD_DIR)/client/lua-5.1.5/bin && printf "#!/bin/sh\nnode \"\$$(dirname \$$0)/luac.js\" \"\$$@\"\n" > luac && chmod +x luac
 	cd $(BUILD_DIR)/client/lua-5.1.5 && cp src/lua.wasm bin/lua.wasm
 	cd $(BUILD_DIR)/client/lua-5.1.5 && cp src/luac.wasm bin/luac.wasm
 	touch "$@"
@@ -188,5 +188,7 @@ $(BUILD_DIR)/%: %
 			echo "Templating '$<' -> '$@'"; \
 			$(TOKU_TEMPLATE) -f "$<" -o "$@";; \
 	esac
+
+-include $(shell find $(BUILD_BASE_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
 
 .PHONY: all run kill test iterate
