@@ -24,6 +24,6 @@ openresty -p "$PWD" -c nginx.conf
 
 if [ "$<% return variable_prefix %>_FG" = "1" ]
 then
-  trap "kill \"$(cat server.pid)\"" EXIT
+  trap "kill \"$(cat server.pid)\"; exit;" EXIT HUP INT QUIT TERM
   tail -qf logs/*
 fi

@@ -74,6 +74,6 @@ $(DIST_DIR)/scripts/%: scripts/%
 deps/%/results.mk: deps/%/Makefile
 	@$(MAKE) -C "$(dir $@)"
 
--include $(shell find $(BUILD_BASE_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
+-include $(shell find $(BUILD_DIR) -regex "$(BUILD_DIR)/dist/.*" -prune -o -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
 
 .PHONY: all luarocks

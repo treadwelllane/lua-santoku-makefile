@@ -1,5 +1,7 @@
 export VPFX = <% return variable_prefix %>
 
+include $(addprefix ../, $(PARENT_DEPS_RESULTS))
+
 LIB_LUA = $(shell find * -name '*.lua')
 LIB_C = $(shell find * -name '*.c')
 LIB_O = $(LIB_C:.c=.o)

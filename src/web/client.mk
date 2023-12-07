@@ -1,4 +1,7 @@
-<% sys = require("santoku.system") %>
+<%
+	sys = require("santoku.system")
+	client = client or {}
+%>
 
 export VPFX = <% return variable_prefix %>
 
@@ -11,14 +14,14 @@ include $(DEPS_RESULTS)
 
 ROCKSPEC = $(BUILD_DIR)/client/$(NAME)-client-$(VERSION).rockspec
 
-# TODO: Omit in dev
+<% template:push(client.eruda ~= false) %>
 ERUDA_JS = $(DIST_DIR)/public/eruda.js
+<% template:pop() %>
 
-RES = $(patsubst res/%, $(DIST_DIR)/public/%, $(shell find res -type f 2>/dev/null))
-STATIC = $(patsubst static/%, $(DIST_DIR)/public/%, $(shell find static -type f 2>/dev/null))
+STATIC = $(patsubst static/%, $(DIST_DIR)/public/%, $(shell find static -type f ! -name '*.d' 2>/dev/null))
 
 DEPS = $(ROCKSPEC) $(ERUDA_JS)
-DEPS += $(RES) $(STATIC)
+DEPS += $(STATIC)
 
 all: $(DEPS) luarocks
 
@@ -38,11 +41,6 @@ $(DIST_DIR)/%: %
 	mkdir -p "$(dir $@)"
 	cp "$<" "$@"
 
-$(DIST_DIR)/public/%: res/%
-	@echo "Copying '$<' -> '$@'"
-	mkdir -p "$(dir $@)"
-	cp "$<" "$@"
-
 $(DIST_DIR)/public/%: static/%
 	@echo "Copying '$<' -> '$@'"
 	mkdir -p "$(dir $@)"
@@ -51,6 +49,6 @@ $(DIST_DIR)/public/%: static/%
 deps/%/results.mk: deps/%/Makefile
 	@$(MAKE) -C "$(dir $@)"
 
--include $(shell find $(BUILD_BASE_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
+-include $(shell find $(BUILD_DIR) -regex "$(BUILD_DIR)/dist/.*" -prune -o -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
 
 .PHONY: all luarocks

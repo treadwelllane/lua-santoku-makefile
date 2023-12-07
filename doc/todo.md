@@ -1,5 +1,7 @@
 # Now
 
+- test PARENT_DEPS_RESULTS (replacement for make -E)
+
 - Use VPFX whenever we're exporting variables
 - Don't build client luarocks, lua, etc if no client-side lua
 - Don't build nginx, etc if no server-side lua
@@ -8,7 +10,8 @@
   converting dashes to underscores
 - limit include deps files to well-known project dirs, avoiding deps,
   lua_modules, dist, etc.
-- don't rebuild server/etc when just client/static changes/etc
+- Don't rebuild server/etc when just client/static changes/etc
+- Santoku trace in both prod and dev
 - Cleanup
 
 # Later
