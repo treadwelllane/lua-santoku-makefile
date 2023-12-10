@@ -65,6 +65,7 @@ $(RUN_SH_DIST): $(RUN_SH_BUILD)
 	@echo "Copying '$<' -> '$@'"
 	mkdir -p "$(dir $@)"
 	cp "$<" "$@"
+	chmod +x "$@"
 
 $(DIST_DIR)/scripts/%: scripts/%
 	@echo "Copying '$<' -> '$@'"

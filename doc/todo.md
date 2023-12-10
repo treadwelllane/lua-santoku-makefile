@@ -1,11 +1,10 @@
 # Now
 
-- test PARENT_DEPS_RESULTS (replacement for make -E)
-
+- avoid tail in run.sh
 - Use VPFX whenever we're exporting variables
 - Don't build client luarocks, lua, etc if no client-side lua
 - Don't build nginx, etc if no server-side lua
-- Install local santoku-cli as part of build process
+- Install local santoku-cli, luacov, luacheck as part of build process
 - Auto-generate variable prefix from app name by transforming to uppercase and
   converting dashes to underscores
 - limit include deps files to well-known project dirs, avoiding deps,

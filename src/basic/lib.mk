@@ -16,8 +16,8 @@ LIB_LDFLAGS += -Wall $(addprefix -L, $(LUA_LIBDIR))
 <% template:push(os.getenv("TEST") == "1") %>
 
 ifeq ($($(VPFX)_SANITIZE),1)
-LIB_CFLAGS += -fsanitize=address -fsanitize=leak
-LIB_LDFLAGS += -fsanitize=address -fsanitize=leak
+LIB_CFLAGS := -fsanitize=address -fsanitize=leak $(LIB_CFLAGS)
+LIB_LDFLAGS := -fsanitize=address -fsanitize=leak $(LIB_LDFLAGS)
 endif
 
 <% template:pop() %>

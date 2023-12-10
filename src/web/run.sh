@@ -20,10 +20,10 @@ cd "$(dirname $0)"
 mkdir -p logs
 touch logs/error.log logs/access.log
 
-openresty -p "$PWD" -c nginx.conf
-
 if [ "$<% return variable_prefix %>_FG" = "1" ]
 then
-  trap "kill \"$(cat server.pid)\"; exit;" EXIT HUP INT QUIT TERM
-  tail -qf logs/*
+  tail -qf logs/* &
+  exec openresty -p "$PWD" -c nginx.conf
+else
+  openresty -p "$PWD" -c nginx.conf &
 fi
