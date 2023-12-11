@@ -1,6 +1,8 @@
 # Now
 
 - avoid tail in run.sh
+- Check if luacov table is working correctly (see santoku-iconv,
+  luacov.stats.out doesn't contain any lines for iconv.c but reports hits)
 - Use VPFX whenever we're exporting variables
 - Don't build client luarocks, lua, etc if no client-side lua
 - Don't build nginx, etc if no server-side lua
