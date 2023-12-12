@@ -1,5 +1,8 @@
 # Now
 
+- Add dev_dependencies (defaults to santoku-cli, luacheck, luacov, but can be
+  added to)
+- print relative paths where possible
 - avoid tail in run.sh
 - Check if luacov table is working correctly (see santoku-iconv,
   luacov.stats.out doesn't contain any lines for iconv.c but reports hits)
