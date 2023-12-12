@@ -1,9 +1,9 @@
 export VPFX = <% return variable_prefix %>
 
-include $(DEPS_RESULTS)
-
 DEPS_DIRS = $(shell find deps/* -maxdepth 0 -type d 2>/dev/null)
 DEPS_RESULTS = $(addsuffix /results.mk, $(DEPS_DIRS))
+
+include $(DEPS_RESULTS)
 
 all: $(DEPS_RESULTS) $(TEST_RUN_SH)
 	@if [ -d lib ]; then $(MAKE) -C lib PARENT_DEPS_RESULTS="$(DEPS_RESULTS)"; fi
