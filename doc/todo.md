@@ -1,5 +1,15 @@
 # Now
 
+- Figure out how to enable luac based on existance of luac or if interpreter is
+  luajit (with luajit -b). Luac is currently disabled
+- When running deps, invoke make results.mk so that results.mk doesn't have to
+  be the first target (lots of confusion running "make" and wondering why
+  results.mk isn't created, only to realize it isn't the first target)
+- Install toku cli, luacov, and luacheck as part of build
+- Use-provided temmplates
+- Test removal of make -E on mac
+- Documentation
+- Reduce verbosity (specifically for install/cp)
 - Add dev_dependencies (defaults to santoku-cli, luacheck, luacov, but can be
   added to)
 - print relative paths where possible

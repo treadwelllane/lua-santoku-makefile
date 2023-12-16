@@ -17,12 +17,38 @@ install: all
 
 TEST_RUN_SH = run.sh
 
-test: $(TEST_RUN_SH)
+test: $(TEST_RUN_SH) $(WASM_TESTS)
 	sh $(TEST_RUN_SH)
 
 $(TEST_RUN_SH): $(PREAMBLE)
 	@echo "Generating '$@'"
 	@sh -c 'echo $(TEST_RUN_SH_DATA) | base64 -d | $(TOKU_TEMPLATE_TEST) -f - -o "$@"'
+
+$(BUILD_DIR)/test/spec-bundled/%: $(BUILD_DIR)/test/spec/%.lua
+	echo "Bundling '$<' -> '$(patsubst %.lua,%, $<)'"
+	mkdir -p "$(patsubst $(BUILD_DIR)/test/spec/%,$(BUILD_DIR)/test/spec-bundler/%, $(dir $<))"
+	$(CLIENT_VARS) toku bundle \
+		--env $(VPFX)_SANITIZE "$($(VPFX)_SANITIZE)" \
+		--env LUACOV_CONFIG "$(TEST_LUACOV_CFG)" \
+		--path "$(shell $(TEST_LUAROCKS) path --lr-path)" \
+		--cpath "$(shell $(TEST_LUAROCKS) path --lr-cpath)" \
+		--mod luacov \
+		--mod luacov.hook \
+		--ignore debug \
+		--cc emcc \
+		--flags " -sASSERTIONS -sSINGLE_FILE -sALLOW_MEMORY_GROWTH -sEXIT_RUNTIME=1 -lnodefs.js -lnoderawfs.js" \
+		--flags " $(LIB_CFLAGS) $(LIB_LDFLAGS)" \
+		--flags " -I $(CLIENT_LUA_DIR)/include" \
+		--flags " -L $(CLIENT_LUA_DIR)/lib" \
+		--flags " -l lua" \
+		--flags " -l m" \
+		--input "$<" \
+		--output-directory "$(patsubst $(BUILD_DIR)/test/spec/%,$(BUILD_DIR)/test/spec-bundler/%, $(dir $<))" \
+		--output-prefix "$(notdir $(patsubst %.lua,%, $<))"
+	echo "Copying '$(patsubst %.lua,%, $<)' -> '$@'"
+	mkdir -p "$(dir $@)"
+	cp "$(patsubst $(BUILD_DIR)/test/spec/%.lua,$(BUILD_DIR)/test/spec-bundler/%, $<)" "$@"
+
 
 .PHONY: test
 

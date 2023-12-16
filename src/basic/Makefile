@@ -17,7 +17,19 @@ endif
 # NOTE: This allows callers to override install location
 LUAROCKS ?= luarocks
 
+ifdef $(VPFX)_WASM
+export $(VPFX)_WASM
+export CLIENT_VARS = CC="emcc" CXX="em++" AR="emar" LD="emcc" NM="llvm-nm" LDSHARED="emcc" RANLIB="emranlib"
+export BUILD_DIR = $(BUILD_BASE_DIR)/$($(VPFX)_ENV)-wasm
+export CC = emcc
+export CXX = em++
+export AR = emar
+export NM = llvm-nm
+export LDSHARED = emcc
+export RANLIB = emranlib
+else
 export BUILD_DIR = $(BUILD_BASE_DIR)/$($(VPFX)_ENV)
+endif
 
 TOKU_TEMPLATE = BUILD_DIR="$(BUILD_DIR)" toku template -M -c $(ROOT_DIR)/config.lua
 export TOKU_TEMPLATE_TEST = TEST=1 $(TOKU_TEMPLATE)
@@ -25,7 +37,8 @@ ROCKSPEC = $(BUILD_DIR)/$(NAME)-$(VERSION).rockspec
 
 LIB = $(shell find lib -type f 2>/dev/null)
 BIN = $(shell find bin -type f 2>/dev/null)
-TEST = $(shell find test -type f 2>/dev/null)
+TEST_SPEC = $(shell find test/spec -type f 2>/dev/null)
+TEST_OTHER = $(filter-out $(TEST_SPEC), $(shell find test -type f 2>/dev/null))
 RES = $(shell find res -type f 2>/dev/null)
 DEPS = $(shell find deps -type f 2>/dev/null)
 
@@ -42,11 +55,13 @@ endif
 TEST_LIB_MK = $(BUILD_DIR)/test/lib/Makefile
 TEST_BIN_MK = $(BUILD_DIR)/test/bin/Makefile
 TEST_ROCKSPEC = $(BUILD_DIR)/test/$(NAME)-$(VERSION).rockspec
-TEST_LUAROCKS = LUAROCKS_CONFIG=$(TEST_LUAROCKS_CFG) luarocks
+export TEST_LUAROCKS = LUAROCKS_CONFIG=$(TEST_LUAROCKS_CFG) luarocks
 TEST_LUAROCKS_CFG = $(BUILD_DIR)/test/luarocks.lua
 TEST_LUAROCKS_MK = $(BUILD_DIR)/test/Makefile
 TEST_ENV = $(BUILD_DIR)/test/lua.env
-TEST_LUACOV_CFG = $(BUILD_DIR)/test/luacov.lua
+export TEST_LUACOV_CFG = $(BUILD_DIR)/test/luacov.lua
+export TEST_LUACOV_STATS_FILE = $(BUILD_DIR)/test/luacov.stats.out
+export TEST_LUACOV_REPORT_FILE = $(BUILD_DIR)/test/luacov.report.out
 TEST_LUACHECK_CFG = $(BUILD_DIR)/test/luacheck.lua
 
 PREAMBLE_DATA = <% return check(sys.sh("sh", "-c", "base64 -w0 < src/basic/preamble.mk")):co():head() %>
@@ -67,12 +82,41 @@ CONFIG_DEPS = $(lastword $(MAKEFILE_LIST))
 CONFIG_DEPS += $(ROCKSPEC) $(LUAROCKS_MK) $(LIB_MK) $(BIN_MK)
 CONFIG_DEPS += $(TEST_ROCKSPEC) $(TEST_LUAROCKS_MK) $(TEST_LIB_MK) $(TEST_BIN_MK) $(TEST_LUAROCKS_CFG)
 CONFIG_DEPS += $(TEST_ENV) $(TEST_LUACOV_CFG) $(TEST_LUACHECK_CFG)
-CONFIG_DEPS += $(addprefix $(BUILD_DIR)/, $(LIB) $(BIN) $(TEST) $(RES) $(DEPS))
+CONFIG_DEPS += $(addprefix $(BUILD_DIR)/, $(LIB) $(BIN) $(RES) $(DEPS))
 CONFIG_DEPS += $(addprefix $(BUILD_DIR)/test/, $(LIB) $(BIN) $(RES) $(DEPS))
+
+ifeq ($($(VPFX)_WASM),1)
+CONFIG_DEPS += $(addprefix $(BUILD_DIR)/, $(TEST_SPEC) $(TEST_OTHER))
+export WASM_TESTS = $(patsubst test/spec/%.lua,$(BUILD_DIR)/test/spec-bundled/%, $(TEST_SPEC))
+else
+CONFIG_DEPS += $(addprefix $(BUILD_DIR)/, $(TEST_SPEC) $(TEST_OTHER))
+endif
 
 TARBALL = $(TARBALL_DIR).tar.gz
 TARBALL_DIR = $(NAME)-$(VERSION)
 TARBALL_SRCS = Makefile lib/Makefile bin/Makefile $(shell find lib bin deps res -type f 2>/dev/null)
+
+ifeq ($($(VPFX)_WASM),1)
+CLIENT_LUA_OK = $(BUILD_DIR)/lua.ok
+export CLIENT_LUA_DIR = $(BUILD_DIR)/lua-5.1.5
+CONFIG_DEPS := $(CLIENT_LUA_OK) $(CONFIG_DEPS)
+$(CLIENT_LUA_OK):
+	mkdir -p $(BUILD_DIR)
+	[ ! -f $(BUILD_DIR)/lua-5.1.5.tar.gz ] && \
+		cd $(BUILD_DIR) && wget https://www.lua.org/ftp/lua-5.1.5.tar.gz || true
+	rm -rf $(BUILD_DIR)/lua-5.1.5
+	cd $(BUILD_DIR) && tar xf lua-5.1.5.tar.gz
+	# TODO: we should  only link nodefs.js and noderawfs.js for the version of lua
+	# we're running on the cli, not the version linked to the output programs,
+	# right?
+	cd $(BUILD_DIR)/lua-5.1.5 && make generic $(CLIENT_VARS) AR="emar rcu" MYLDFLAGS="$(LDFLAGS) -sSINGLE_FILE -sEXIT_RUNTIME=1 -lnodefs.js -lnoderawfs.js"
+	cd $(BUILD_DIR)/lua-5.1.5 && make local $(CLIENT_VARS) AR="emar rcu" MYLDFLAGS="$(LDFLAGS) -sSINGLE_FILE -sEXIT_RUNTIME=1 -lnodefs.js -lnoderawfs.js"
+	cd $(BUILD_DIR)/lua-5.1.5/bin && mv lua lua.js
+	cd $(BUILD_DIR)/lua-5.1.5/bin && mv luac luac.js
+	cd $(BUILD_DIR)/lua-5.1.5/bin && printf "#!/bin/sh\nnode \"\$$(dirname \$$0)/lua.js\" \"\$$@\"\n" > lua && chmod +x lua
+	cd $(BUILD_DIR)/lua-5.1.5/bin && printf "#!/bin/sh\nnode \"\$$(dirname \$$0)/luac.js\" \"\$$@\"\n" > luac && chmod +x luac
+	touch "$@"
+endif
 
 all: $(CONFIG_DEPS)
 	@echo "Running all"
@@ -92,6 +136,9 @@ iterate: all
 		$(MAKE) test; \
 		inotifywait -qqr -e close_write -e create -e delete $(filter-out tmp, $(wildcard *)); \
 	done
+
+test-luarocks: $(CONFIG_DEPS)
+	$(TEST_LUAROCKS) $(ARGS)
 
 ifeq ($($(VPFX)_PUBLIC),1)
 
@@ -206,4 +253,4 @@ $(BUILD_DIR)/test/%: %
 
 -include $(shell find $(BUILD_DIR) -regex ".*/deps/.*/.*" -prune -o -name "*.d" -print 2>/dev/null)
 
-.PHONY: all test iterate install release check-release-status github-release luarocks-upload
+.PHONY: all test iterate install release check-release-status github-release luarocks-upload test-luarocks

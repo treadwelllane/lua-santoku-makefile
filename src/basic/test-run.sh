@@ -24,14 +24,29 @@ else
 
   rm -f luacov.stats.out luacov.report.out || true
 
-  if [ -n "$TEST" ]; then
-    TEST="${TEST#test/}"
-    toku test -s -i "$LUA -l luacov" "$TEST"
-    status=$?
-  elif [ -d spec ]; then
-    toku test -s -i "$LUA -l luacov" --match "^.*%.lua$" spec
-    status=$?
-  fi
+  <% template:push(os.getenv(variable_prefix .. "_WASM") == "1") %>
+
+    if [ -n "$TEST" ]; then
+      TEST="spec-bundled/${TEST#test/spec/}"
+      toku test -s -i node "$TEST"
+      status=$?
+    elif [ -d spec-bundled ]; then
+      toku test -s -i node spec-bundled
+      status=$?
+    fi
+
+  <% template:pop():push(os.getenv(variable_prefix .. "_WASM") ~= "1") %>
+
+    if [ -n "$TEST" ]; then
+      TEST="${TEST#test/}"
+      toku test -s -i "$LUA -l luacov" "$TEST"
+      status=$?
+    elif [ -d spec ]; then
+      toku test -s -i "$LUA -l luacov" --match "^.*%.lua$" spec
+      status=$?
+    fi
+
+  <% template:pop() %>
 
   if [ "$status" = "0" ] && [ -f luacov.lua ]; then
     luacov -c luacov.lua

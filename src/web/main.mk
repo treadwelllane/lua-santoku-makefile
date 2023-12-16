@@ -57,8 +57,11 @@ $(CLIENT_LUA_OK):
 		cd $(BUILD_DIR)/client && wget https://www.lua.org/ftp/lua-5.1.5.tar.gz || true
 	rm -rf $(BUILD_DIR)/client/lua-5.1.5
 	cd $(BUILD_DIR)/client && tar xf lua-5.1.5.tar.gz
-	cd $(BUILD_DIR)/client/lua-5.1.5 && make generic $(CLIENT_VARS) AR="emar rcu" MYLDFLAGS="$(LDFLAGS) -sSINGLE_FILE -sEXIT_RUNTIME=1"
-	cd $(BUILD_DIR)/client/lua-5.1.5 && make local $(CLIENT_VARS) AR="emar rcu" MYLDFLAGS="$(LDFLAGS) -sSINGLE_FILE -sEXIT_RUNTIME=1"
+	# TODO: we should  only link nodefs.js and noderawfs.js for the version of lua
+	# we're running on the cli, not the version linked to the output programs,
+	# right?
+	cd $(BUILD_DIR)/client/lua-5.1.5 && make generic $(CLIENT_VARS) AR="emar rcu" MYLDFLAGS="$(LDFLAGS) -sSINGLE_FILE -sEXIT_RUNTIME=1 -lnodefs.js -lnoderawfs.js"
+	cd $(BUILD_DIR)/client/lua-5.1.5 && make local $(CLIENT_VARS) AR="emar rcu" MYLDFLAGS="$(LDFLAGS) -sSINGLE_FILE -sEXIT_RUNTIME=1 -lnodefs.js -lnoderawfs.js"
 	cd $(BUILD_DIR)/client/lua-5.1.5/bin && mv lua lua.js
 	cd $(BUILD_DIR)/client/lua-5.1.5/bin && mv luac luac.js
 	cd $(BUILD_DIR)/client/lua-5.1.5/bin && printf "#!/bin/sh\nnode \"\$$(dirname \$$0)/lua.js\" \"\$$@\"\n" > lua && chmod +x lua

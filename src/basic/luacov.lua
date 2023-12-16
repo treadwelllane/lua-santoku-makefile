@@ -30,3 +30,6 @@ include = {
     return str.interp("\"%fp\"", { fp = fp })
   end):concat(",\n") %>
 }
+
+statsfile = "<% return os.getenv("TEST_LUACOV_STATS_FILE") %>"
+reportfile = "<% return os.getenv("TEST_LUACOV_REPORT_FILE") %>"
