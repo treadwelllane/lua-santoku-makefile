@@ -34,9 +34,11 @@ $(BUILD_DIR)/test/spec-bundled/%: $(BUILD_DIR)/test/spec/%.lua
 		--cpath "$(shell $(TEST_LUAROCKS) path --lr-cpath)" \
 		--mod luacov \
 		--mod luacov.hook \
+		--mod luacov.tick \
 		--ignore debug \
+		--no-close \
 		--cc emcc \
-		--flags " -sASSERTIONS -sSINGLE_FILE -sALLOW_MEMORY_GROWTH -sEXIT_RUNTIME=1 -lnodefs.js -lnoderawfs.js" \
+		--flags " -sASSERTIONS -sSINGLE_FILE -sALLOW_MEMORY_GROWTH -lnodefs.js -lnoderawfs.js" \
 		--flags " $(LIB_CFLAGS) $(LIB_LDFLAGS)" \
 		--flags " -I $(CLIENT_LUA_DIR)/include" \
 		--flags " -L $(CLIENT_LUA_DIR)/lib" \

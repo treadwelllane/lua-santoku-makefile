@@ -28,10 +28,11 @@ else
 
     if [ -n "$TEST" ]; then
       TEST="spec-bundled/${TEST#test/spec/}"
-      toku test -s -i node "$TEST"
+      TEST="${TEST%.lua}"
+      toku test -s -i "node --expose-gc" "$TEST"
       status=$?
     elif [ -d spec-bundled ]; then
-      toku test -s -i node spec-bundled
+      toku test -s -i "node --expose-gc" spec-bundled
       status=$?
     fi
 
@@ -48,7 +49,7 @@ else
 
   <% template:pop() %>
 
-  if [ "$status" = "0" ] && [ -f luacov.lua ]; then
+  if [ "$status" = "0" ] && type luacov 2>/dev/null && [ -f luacov.stats.out ] && [ -f luacov.lua ]; then
     luacov -c luacov.lua
   fi
 
@@ -58,7 +59,7 @@ else
 
   echo
 
-  if [ -f luacheck.lua ]; then
+  if type luacheck 2>/dev/null && [ -f luacheck.lua ]; then
     luacheck --config luacheck.lua $(find lib bin spec -maxdepth 0 2>/dev/null)
   fi
 

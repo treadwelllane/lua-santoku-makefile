@@ -1,5 +1,8 @@
 # Now
 
+- Luacov doesn't report for WASM builds because of the bundling and loading as
+  a string
+
 - Figure out how to enable luac based on existance of luac or if interpreter is
   luajit (with luajit -b). Luac is currently disabled
 - When running deps, invoke make results.mk so that results.mk doesn't have to
