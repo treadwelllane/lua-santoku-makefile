@@ -1,5 +1,6 @@
 # Now
 
+- Run both wasm and native tests on make release, allow specifying never wasm or never native
 - Luacov doesn't report for WASM builds because of the bundling and loading as
   a string
 

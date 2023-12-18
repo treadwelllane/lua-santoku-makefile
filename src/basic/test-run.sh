@@ -49,7 +49,7 @@ else
 
   <% template:pop() %>
 
-  if [ "$status" = "0" ] && type luacov 2>/dev/null && [ -f luacov.stats.out ] && [ -f luacov.lua ]; then
+  if [ "$status" = "0" ] && type luacov >/dev/null 2>/dev/null && [ -f luacov.stats.out ] && [ -f luacov.lua ]; then
     luacov -c luacov.lua
   fi
 
@@ -59,7 +59,7 @@ else
 
   echo
 
-  if type luacheck 2>/dev/null && [ -f luacheck.lua ]; then
+  if type luacheck >/dev/null 2>/dev/null && [ -f luacheck.lua ]; then
     luacheck --config luacheck.lua $(find lib bin spec -maxdepth 0 2>/dev/null)
   fi
 
