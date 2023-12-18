@@ -1,6 +1,7 @@
 # Now
 
 - Run both wasm and native tests on make release, allow specifying never wasm or never native
+- Don't fail build if luacov module not available
 - Luacov doesn't report for WASM builds because of the bundling and loading as
   a string
 
