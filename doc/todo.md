@@ -1,5 +1,15 @@
 # Now
 
+- When VPFX_PROFILE=1 is set, showing profiles requires a re-compile for WASM
+  but not for standard builds. Is this desired or changable?
+
+- VPFX_PROFILE=1 and VPFX_WASM=1 doesn't print profiles since the --no-close
+  bundler flag results in the profile userdata never getting collected. Can we
+  somehow attach the profiler to the string chunk and then invoke the garbage
+  collector where lua_close would normally go?
+
+- Allow running tests in all lua versions, including luajit by compiling and
+  running locally
 - Run both wasm and native tests on make release, allow specifying never wasm or never native
 - Don't fail build if luacov module not available
 - Luacov doesn't report for WASM builds because of the bundling and loading as

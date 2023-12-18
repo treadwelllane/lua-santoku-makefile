@@ -38,12 +38,17 @@ else
 
   <% template:pop():push(os.getenv(variable_prefix .. "_WASM") ~= "1") %>
 
+    MODS="-l luacov"
+    if [ "$<% return variable_prefix %>_PROFILE" = "1" ]; then
+      MODS="$MODS -l santoku.profile"
+    fi
+
     if [ -n "$TEST" ]; then
       TEST="${TEST#test/}"
-      toku test -s -i "$LUA -l luacov" "$TEST"
+      toku test -s -i "$LUA $MODS" "$TEST"
       status=$?
     elif [ -d spec ]; then
-      toku test -s -i "$LUA -l luacov" --match "^.*%.lua$" spec
+      toku test -s -i "$LUA $MODS" --match "^.*%.lua$" spec
       status=$?
     fi
 

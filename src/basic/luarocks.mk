@@ -24,6 +24,11 @@ $(TEST_RUN_SH): $(PREAMBLE)
 	@echo "Generating '$@'"
 	@sh -c 'echo $(TEST_RUN_SH_DATA) | base64 -d | $(TOKU_TEMPLATE_TEST) -f - -o "$@"'
 
+EXTRA_BUNDLE_FLAGS =
+ifeq ($($(VPFX)_PROFILE),1)
+EXTRA_BUNDLE_FLAGS += --mod santoku.profile
+endif
+
 $(BUILD_DIR)/test/spec-bundled/%: $(BUILD_DIR)/test/spec/%.lua
 	echo "Bundling '$<' -> '$(patsubst %.lua,%, $<)'"
 	mkdir -p "$(patsubst $(BUILD_DIR)/test/spec/%,$(BUILD_DIR)/test/spec-bundler/%, $(dir $<))"
@@ -46,7 +51,8 @@ $(BUILD_DIR)/test/spec-bundled/%: $(BUILD_DIR)/test/spec/%.lua
 		--flags " -l m" \
 		--input "$<" \
 		--output-directory "$(patsubst $(BUILD_DIR)/test/spec/%,$(BUILD_DIR)/test/spec-bundler/%, $(dir $<))" \
-		--output-prefix "$(notdir $(patsubst %.lua,%, $<))"
+		--output-prefix "$(notdir $(patsubst %.lua,%, $<))" \
+		$(EXTRA_BUNDLE_FLAGS)
 	echo "Copying '$(patsubst %.lua,%, $<)' -> '$@'"
 	mkdir -p "$(dir $@)"
 	cp "$(patsubst $(BUILD_DIR)/test/spec/%.lua,$(BUILD_DIR)/test/spec-bundler/%, $<)" "$@"
