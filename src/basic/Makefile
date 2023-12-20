@@ -31,6 +31,8 @@ else
 export BUILD_DIR = $(BUILD_BASE_DIR)/$($(VPFX)_ENV)
 endif
 
+export $(VPFX)_PROFILE
+
 TOKU_TEMPLATE = BUILD_DIR="$(BUILD_DIR)" toku template -M -c $(ROOT_DIR)/config.lua
 export TOKU_TEMPLATE_TEST = TEST=1 $(TOKU_TEMPLATE)
 ROCKSPEC = $(BUILD_DIR)/$(NAME)-$(VERSION).rockspec

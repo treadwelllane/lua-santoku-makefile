@@ -1,5 +1,10 @@
 # Now
 
+- Show 0% for untested files
+
+- Allow installing WASM-built executable globally with locally installed
+  dependencies
+
 - When VPFX_PROFILE=1 is set, showing profiles requires a re-compile for WASM
   but not for standard builds. Is this desired or changable?
 

@@ -24,15 +24,18 @@ $(TEST_RUN_SH): $(PREAMBLE)
 	@echo "Generating '$@'"
 	@sh -c 'echo $(TEST_RUN_SH_DATA) | base64 -d | $(TOKU_TEMPLATE_TEST) -f - -o "$@"'
 
-EXTRA_BUNDLE_FLAGS =
 ifeq ($($(VPFX)_PROFILE),1)
-EXTRA_BUNDLE_FLAGS += --mod santoku.profile
+$(VPFX)_BUNDLE_FLAGS += --mod santoku.profile
+else
+$(VPFX)_BUNDLE_FLAGS += --no-close
 endif
 
 $(BUILD_DIR)/test/spec-bundled/%: $(BUILD_DIR)/test/spec/%.lua
 	echo "Bundling '$<' -> '$(patsubst %.lua,%, $<)'"
 	mkdir -p "$(patsubst $(BUILD_DIR)/test/spec/%,$(BUILD_DIR)/test/spec-bundler/%, $(dir $<))"
 	$(CLIENT_VARS) toku bundle \
+		--env $(VPFX)_WASM "$($(VPFX)_WASM)" \
+		--env $(VPFX)_PROFILE "$($(VPFX)_PROFILE)" \
 		--env $(VPFX)_SANITIZE "$($(VPFX)_SANITIZE)" \
 		--env LUACOV_CONFIG "$(TEST_LUACOV_CFG)" \
 		--path "$(shell $(TEST_LUAROCKS) path --lr-path)" \
@@ -41,7 +44,6 @@ $(BUILD_DIR)/test/spec-bundled/%: $(BUILD_DIR)/test/spec/%.lua
 		--mod luacov.hook \
 		--mod luacov.tick \
 		--ignore debug \
-		--no-close \
 		--cc emcc \
 		--flags " -sASSERTIONS -sSINGLE_FILE -sALLOW_MEMORY_GROWTH -lnodefs.js -lnoderawfs.js" \
 		--flags " $(LIB_CFLAGS) $(LIB_LDFLAGS)" \
@@ -52,7 +54,7 @@ $(BUILD_DIR)/test/spec-bundled/%: $(BUILD_DIR)/test/spec/%.lua
 		--input "$<" \
 		--output-directory "$(patsubst $(BUILD_DIR)/test/spec/%,$(BUILD_DIR)/test/spec-bundler/%, $(dir $<))" \
 		--output-prefix "$(notdir $(patsubst %.lua,%, $<))" \
-		$(EXTRA_BUNDLE_FLAGS)
+		$($(VPFX)_BUNDLE_FLAGS)
 	echo "Copying '$(patsubst %.lua,%, $<)' -> '$@'"
 	mkdir -p "$(dir $@)"
 	cp "$(patsubst $(BUILD_DIR)/test/spec/%.lua,$(BUILD_DIR)/test/spec-bundler/%, $<)" "$@"
